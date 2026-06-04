@@ -100,8 +100,8 @@ class HttpHubClient implements HubClient
     }
 
     /**
-     * There is no dedicated /apps endpoint — AppHealth comes only inside summary.
-     * One extra summary call; acceptable until Plan D adds a dedicated endpoint.
+     * There is no dedicated /apps endpoint — AppHealth comes only inside summary
+     * (the hub folds monitored-app health into /api/v1/summary).
      */
     public function apps(): Collection
     {
