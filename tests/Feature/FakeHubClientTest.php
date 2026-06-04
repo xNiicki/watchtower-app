@@ -1,0 +1,98 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Contracts\HubClient;
+use App\Data\Alert;
+use App\Data\AppHealth;
+use App\Data\DashboardSummary;
+use App\Data\Target;
+use App\Data\TargetStatus;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
+
+class FakeHubClientTest extends TestCase
+{
+    use RefreshDatabase;
+
+    #[Test]
+    public function summary_reflects_fixture_fleet(): void
+    {
+        $summary = app(HubClient::class)->summary();
+
+        $this->assertInstanceOf(DashboardSummary::class, $summary);
+        $this->assertGreaterThanOrEqual(15, $summary->targetsTotal);
+        $this->assertLessThanOrEqual($summary->targetsTotal, $summary->targetsUp);
+        $this->assertNotEmpty($summary->openAlerts);
+    }
+
+    #[Test]
+    public function targets_returns_the_fleet_with_valid_statuses(): void
+    {
+        $targets = app(HubClient::class)->targets();
+
+        $this->assertNotEmpty($targets);
+
+        foreach ($targets as $target) {
+            $this->assertInstanceOf(Target::class, $target);
+        }
+
+        foreach ($targets->pluck('status')->unique() as $status) {
+            $this->assertInstanceOf(TargetStatus::class, $status);
+        }
+    }
+
+    #[Test]
+    public function target_finds_one_by_id_and_throws_for_unknown(): void
+    {
+        $client = app(HubClient::class);
+
+        $this->assertSame('booking', $client->target('booking')->name);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $client->target('does-not-exist');
+    }
+
+    #[Test]
+    public function alerts_returns_open_alerts_acknowledge_flips_the_flag(): void
+    {
+        // Relies on the scoped container binding: same FakeHubClient instance across calls in one request.
+        $client = app(HubClient::class);
+        $first = $client->alerts()->first();
+
+        $this->assertInstanceOf(Alert::class, $first);
+        $this->assertFalse($first->acknowledged);
+
+        $client->acknowledgeAlert($first->id);
+
+        $this->assertTrue($client->alerts()->firstWhere('id', $first->id)->acknowledged);
+    }
+
+    #[Test]
+    public function logs_filter_by_host_and_search_term(): void
+    {
+        $client = app(HubClient::class);
+
+        $hostLogs = $client->logs(['host' => 'mariadb-prod']);
+        $this->assertNotEmpty($hostLogs);
+
+        foreach ($hostLogs as $entry) {
+            $this->assertSame('mariadb-prod', $entry->host);
+        }
+
+        $this->assertLessThan($client->logs()->count(), $client->logs(['search' => 'backup'])->count());
+    }
+
+    #[Test]
+    public function apps_returns_booking_health(): void
+    {
+        $apps = app(HubClient::class)->apps();
+
+        $this->assertNotEmpty($apps);
+        $this->assertInstanceOf(AppHealth::class, $apps->first());
+        $this->assertSame('booking', $apps->first()->name);
+    }
+}
