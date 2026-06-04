@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Contracts\HubClient;
+use App\Data\Target;
+use App\Data\TargetStatus;
 use App\Livewire\Infra\TargetDetail;
 use App\Livewire\Infra\TargetList;
+use App\Services\FakeHubClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -70,6 +75,48 @@ class InfraTest extends TestCase
         Livewire::test(TargetDetail::class, ['targetId' => 'mariadb-prod'])
             ->assertSee('cpu')
             ->assertSee('mem');
+    }
+
+    #[Test]
+    public function paused_targets_are_hidden_from_the_list(): void
+    {
+        // paperless-gpt and o3-test are Paused (disabled in the hub) in the fixture.
+        $component = Livewire::test(TargetList::class);
+
+        $component->assertDontSee('paperless-gpt');
+        $component->assertDontSee('o3-test');
+
+        $html = $component->html();
+        $this->assertSame(0, substr_count($html, route('infra.show', 'paperless-gpt')));
+        $this->assertSame(0, substr_count($html, route('infra.show', 'o3-test')));
+    }
+
+    #[Test]
+    public function non_paused_targets_still_appear_in_the_list(): void
+    {
+        Livewire::test(TargetList::class)
+            ->assertSee('mariadb-prod') // Up
+            ->assertSee('jelly');       // Down
+    }
+
+    #[Test]
+    public function empty_state_shows_when_all_targets_are_paused(): void
+    {
+        $this->app->instance(HubClient::class, new class extends FakeHubClient
+        {
+            public function targets(): Collection
+            {
+                return collect([
+                    new Target('alpha', 'alpha', 'lxc', TargetStatus::Paused, 'pve'),
+                    new Target('beta', 'beta', 'lxc', TargetStatus::Paused, 'pve'),
+                ]);
+            }
+        });
+
+        Livewire::test(TargetList::class)
+            ->assertSee('No targets reported yet.')
+            ->assertDontSee('alpha')
+            ->assertDontSee('beta');
     }
 
     #[Test]
