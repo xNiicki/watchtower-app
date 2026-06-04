@@ -22,4 +22,12 @@ class AppListTest extends TestCase
             ->assertSee('queue 3')
             ->assertSee('14 mails');
     }
+
+    #[Test]
+    public function shows_stale_state_and_last_seen(): void
+    {
+        Livewire::test(AppList::class)
+            ->assertSee('stale')
+            ->assertSee('last seen');
+    }
 }

@@ -100,8 +100,8 @@ class HttpHubClient implements HubClient
     }
 
     /**
-     * There is no dedicated /apps endpoint — AppHealth comes only inside summary.
-     * One extra summary call; acceptable until Plan D adds a dedicated endpoint.
+     * There is no dedicated /apps endpoint — AppHealth comes only inside summary
+     * (the hub folds monitored-app health into /api/v1/summary).
      */
     public function apps(): Collection
     {
@@ -217,6 +217,8 @@ class HttpHubClient implements HubClient
             failedJobs24h: (int) $data['failedJobs24h'],
             mailSent24h: (int) $data['mailSent24h'],
             lastDeployAt: isset($data['lastDeployAt']) ? CarbonImmutable::parse($data['lastDeployAt']) : null,
+            lastSeenAt: isset($data['lastSeenAt']) ? CarbonImmutable::parse($data['lastSeenAt']) : null,
+            stale: (bool) ($data['stale'] ?? false),
         );
     }
 

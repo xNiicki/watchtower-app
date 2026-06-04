@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Infra;
 
 use App\Contracts\HubClient;
+use App\Data\TargetStatus;
 use App\Livewire\Concerns\InteractsWithHub;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -19,7 +20,11 @@ class TargetList extends Component
 
     public function render(HubClient $hub): View
     {
-        $targets = $this->hubData(fn () => $hub->targets()) ?? collect();
+        // Paused targets are disabled in the hub admin and should not clutter the
+        // list; they are still reachable on the detail screen if navigated directly.
+        $targets = ($this->hubData(fn () => $hub->targets()) ?? collect())
+            ->reject(fn ($t) => $t->status === TargetStatus::Paused)
+            ->values();
 
         $storageTargets = $targets->filter(fn ($t) => $t->type === 'storage')->values();
         $nonStorage = $targets->reject(fn ($t) => $t->type === 'storage');

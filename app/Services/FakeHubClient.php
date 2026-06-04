@@ -137,6 +137,19 @@ class FakeHubClient implements HubClient
                 failedJobs24h: 1,
                 mailSent24h: 14,
                 lastDeployAt: CarbonImmutable::now()->subDays(2),
+                lastSeenAt: CarbonImmutable::now()->subMinute(),
+                stale: false,
+            ),
+            new AppHealth(
+                name: 'newsletter',
+                healthy: false,
+                errorsLastHour: 0,
+                queueDepth: 0,
+                failedJobs24h: 0,
+                mailSent24h: 0,
+                lastDeployAt: null,
+                lastSeenAt: CarbonImmutable::now()->subMinutes(42),
+                stale: true,
             ),
         ]);
     }

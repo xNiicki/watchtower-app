@@ -311,6 +311,45 @@ class HttpHubClientTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // apps() — lastSeenAt + stale hydration
+    // -------------------------------------------------------------------------
+
+    public function test_apps_hydrates_last_seen_at_and_stale(): void
+    {
+        Http::fake([
+            self::BASE.'/api/v1/summary' => Http::response([
+                'targetsUp' => 1,
+                'targetsTotal' => 1,
+                'targetsPaused' => 0,
+                'openAlerts' => [],
+                'nodes' => [],
+                'apps' => [[
+                    'name' => 'booking', 'healthy' => false,
+                    'errorsLastHour' => 0, 'queueDepth' => 0,
+                    'failedJobs24h' => 0, 'mailSent24h' => 0,
+                    'lastDeployAt' => null,
+                    'lastSeenAt' => '2026-06-04T17:40:00+00:00',
+                    'stale' => true,
+                ]],
+                'lastBackupAt' => null,
+                'lastBackupOk' => false,
+                'tankUsagePercent' => 0.0,
+            ]),
+        ]);
+
+        $apps = $this->client()->apps();
+
+        $this->assertCount(1, $apps);
+
+        /** @var AppHealth $app */
+        $app = $apps->first();
+        $this->assertInstanceOf(AppHealth::class, $app);
+        $this->assertTrue($app->stale);
+        $this->assertInstanceOf(CarbonImmutable::class, $app->lastSeenAt);
+        $this->assertSame('2026-06-04T17:40:00+00:00', $app->lastSeenAt->toIso8601String());
+    }
+
+    // -------------------------------------------------------------------------
     // Transport failure clears endpoint cache (Change 2)
     // -------------------------------------------------------------------------
 
