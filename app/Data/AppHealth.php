@@ -16,5 +16,7 @@ final readonly class AppHealth
         public int $failedJobs24h,
         public int $mailSent24h,
         public ?CarbonImmutable $lastDeployAt = null,
+        public ?CarbonImmutable $lastSeenAt = null,
+        public bool $stale = false,
     ) {}
 }
