@@ -463,6 +463,13 @@ class HttpHubClientTest extends TestCase
         $this->assertNull($this->client()->appMetricsSeries('booking', '1h'));
     }
 
+    public function test_app_metrics_series_surfaces_non_404_errors(): void
+    {
+        Http::fake(['*/api/v1/apps/booking/metrics*' => Http::response(null, 500)]);
+        $this->expectException(HubUnreachableException::class);
+        $this->client()->appMetricsSeries('booking', '1h');
+    }
+
     // -------------------------------------------------------------------------
     // appEvent()
     // -------------------------------------------------------------------------
