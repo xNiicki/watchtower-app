@@ -26,7 +26,13 @@ document.addEventListener('alpine:init', () => {
         init() {
             this.render(initial);
             // Range changes push fresh data via a Livewire-dispatched browser event.
-            window.addEventListener('metrics-updated', (e) => this.render(e.detail.chart));
+            this._onMetricsUpdated = (e) => this.render(e.detail.chart);
+            window.addEventListener('metrics-updated', this._onMetricsUpdated);
+        },
+        destroy() {
+            window.removeEventListener('metrics-updated', this._onMetricsUpdated);
+            this.requestsChart?.destroy();
+            this.latencyChart?.destroy();
         },
         render(data) {
             if (!data) return;
