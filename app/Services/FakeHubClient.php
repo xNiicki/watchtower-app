@@ -9,6 +9,7 @@ use App\Data\Alert;
 use App\Data\AlertTier;
 use App\Data\AppEvent;
 use App\Data\AppHealth;
+use App\Data\AppMetrics;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
 use App\Data\Target;
@@ -171,5 +172,14 @@ class FakeHubClient implements HubClient
         ])->when(isset($filters['search']), fn ($c) => $c->filter(
             fn (AppEvent $e) => str_contains(strtolower($e->message), strtolower((string) $filters['search']))
         ))->values();
+    }
+
+    public function appMetrics(string $slug): ?AppMetrics
+    {
+        if ($slug !== 'booking') {
+            return null;
+        }
+
+        return new AppMetrics(requestsPerMin: 120, latencyAvgMs: 45, latencyMaxMs: 320, slowRequests: 2, slowQueries: 1);
     }
 }

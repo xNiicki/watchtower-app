@@ -23,9 +23,30 @@ class AppEvents extends Component
 
     public string $search = '';
 
-    public function mount(string $slug): void
+    /**
+     * Metrics don't depend on the search filter, so they're fetched once in
+     * mount() and carried across re-renders rather than re-hitting /metrics on
+     * every debounced keystroke. Stored as a Livewire-serializable array shape
+     * (custom value objects can't be dehydrated as public properties).
+     *
+     * @var array{requestsPerMin: int, latencyAvgMs: int, latencyMaxMs: int, slowRequests: int, slowQueries: int}|null
+     */
+    #[Locked]
+    public ?array $metrics = null;
+
+    public function mount(string $slug, HubClient $hub): void
     {
         $this->slug = $slug;
+
+        $metrics = $this->hubData(fn () => $hub->appMetrics($this->slug));
+
+        $this->metrics = $metrics === null ? null : [
+            'requestsPerMin' => $metrics->requestsPerMin,
+            'latencyAvgMs' => $metrics->latencyAvgMs,
+            'latencyMaxMs' => $metrics->latencyMaxMs,
+            'slowRequests' => $metrics->slowRequests,
+            'slowQueries' => $metrics->slowQueries,
+        ];
     }
 
     public function render(HubClient $hub): View
