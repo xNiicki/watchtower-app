@@ -8,6 +8,7 @@ use App\Contracts\HubClient;
 use App\Livewire\Concerns\InteractsWithHub;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -17,6 +18,7 @@ class AppEvents extends Component
 {
     use InteractsWithHub;
 
+    #[Locked]
     public string $slug = '';
 
     public string $search = '';

@@ -2,7 +2,7 @@
     @include('partials.hub-error')
 
     <input type="search" wire:model.live.debounce.300ms="search" placeholder="Search messages…"
-           class="w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500" />
+           class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500" />
 
     @forelse ($events as $event)
         <div class="rounded-xl bg-zinc-900 p-4">
@@ -16,6 +16,10 @@
             <p class="mt-2 text-xs text-zinc-500">last seen {{ $event->lastSeenAt->diffForHumans() }}</p>
         </div>
     @empty
-        <p class="py-12 text-center text-zinc-500">No events recorded.</p>
+        @if ($search !== '')
+            <p class="py-12 text-center text-zinc-500">No matching events.</p>
+        @else
+            <p class="py-12 text-center text-zinc-500">No events recorded.</p>
+        @endif
     @endforelse
 </div>

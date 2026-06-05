@@ -159,6 +159,10 @@ class FakeHubClient implements HubClient
 
     public function appEvents(string $slug, array $filters = []): Collection
     {
+        if ($slug !== 'booking') {
+            return collect();
+        }
+
         return collect([
             new AppEvent('1', 'exception', 'critical', 'TypeError', 'Cannot read property foo', 412,
                 CarbonImmutable::now()->subHours(2), CarbonImmutable::now()->subMinutes(3)),

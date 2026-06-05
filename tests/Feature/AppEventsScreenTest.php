@@ -20,7 +20,7 @@ class AppEventsScreenTest extends TestCase
         Livewire::test(AppEvents::class, ['slug' => 'booking'])
             ->assertOk()
             ->assertSee('TypeError')
-            ->assertSee('412');
+            ->assertSee('412×');
     }
 
     #[Test]
@@ -29,6 +29,15 @@ class AppEventsScreenTest extends TestCase
         Livewire::test(AppEvents::class, ['slug' => 'booking'])
             ->set('search', 'smtp')
             ->assertSee('SendInvoice')
+            ->assertDontSee('TypeError');
+    }
+
+    #[Test]
+    public function shows_no_events_recorded_for_unknown_slug(): void
+    {
+        Livewire::test(AppEvents::class, ['slug' => 'unknown'])
+            ->assertOk()
+            ->assertSee('No events recorded.')
             ->assertDontSee('TypeError');
     }
 }
