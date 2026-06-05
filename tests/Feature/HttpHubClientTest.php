@@ -373,6 +373,29 @@ class HttpHubClientTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // appMetrics()
+    // -------------------------------------------------------------------------
+
+    public function test_fetches_app_metrics_latest_summary(): void
+    {
+        Http::fake([self::BASE.'/api/v1/apps/booking/metrics*' => Http::response([
+            'range' => '1h',
+            'series' => (object) [],
+            'latest' => [
+                'requestsPerMin' => 120, 'latencyAvgMs' => 45, 'latencyMaxMs' => 320,
+                'slowRequests' => 2, 'slowQueries' => 1,
+            ],
+        ], 200)]);
+
+        $m = $this->client()->appMetrics('booking');
+
+        $this->assertNotNull($m);
+        $this->assertSame(120, $m->requestsPerMin);
+        $this->assertSame(45, $m->latencyAvgMs);
+        $this->assertSame(2, $m->slowRequests);
+    }
+
+    // -------------------------------------------------------------------------
     // Transport failure clears endpoint cache (Change 2)
     // -------------------------------------------------------------------------
 

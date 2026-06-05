@@ -7,6 +7,7 @@ namespace App\Contracts;
 use App\Data\Alert;
 use App\Data\AppEvent;
 use App\Data\AppHealth;
+use App\Data\AppMetrics;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
 use App\Data\Target;
@@ -45,4 +46,6 @@ interface HubClient
 
     /** @return Collection<int, AppEvent> */
     public function appEvents(string $slug, array $filters = []): Collection;
+
+    public function appMetrics(string $slug): ?AppMetrics;
 }

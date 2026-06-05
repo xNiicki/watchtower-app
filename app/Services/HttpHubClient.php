@@ -10,6 +10,7 @@ use App\Data\Alert;
 use App\Data\AlertTier;
 use App\Data\AppEvent;
 use App\Data\AppHealth;
+use App\Data\AppMetrics;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
 use App\Data\Target;
@@ -120,6 +121,29 @@ class HttpHubClient implements HubClient
 
         return collect($this->send('get', "/api/v1/apps/{$slug}/events", query: $query)->json())
             ->map(fn (array $e) => $this->hydrateAppEvent($e));
+    }
+
+    public function appMetrics(string $slug): ?AppMetrics
+    {
+        $response = $this->send('get', "/api/v1/apps/{$slug}/metrics", throwOnError: false);
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        $latest = $response->json('latest');
+
+        if (! is_array($latest)) {
+            return null;
+        }
+
+        return new AppMetrics(
+            requestsPerMin: (int) ($latest['requestsPerMin'] ?? 0),
+            latencyAvgMs: (int) ($latest['latencyAvgMs'] ?? 0),
+            latencyMaxMs: (int) ($latest['latencyMaxMs'] ?? 0),
+            slowRequests: (int) ($latest['slowRequests'] ?? 0),
+            slowQueries: (int) ($latest['slowQueries'] ?? 0),
+        );
     }
 
     // -------------------------------------------------------------------------
