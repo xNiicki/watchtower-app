@@ -372,6 +372,26 @@ class HttpHubClientTest extends TestCase
         $this->assertSame('critical', $events->first()->severity);
     }
 
+    public function test_app_events_404_returns_an_empty_collection_not_an_error(): void
+    {
+        // Unknown app slug is a graceful empty list, mirroring FakeHubClient.
+        Http::fake([self::BASE.'/api/v1/apps/ghost/events*' => Http::response(['message' => 'Not Found'], 404)]);
+
+        $events = $this->client()->appEvents('ghost');
+
+        $this->assertTrue($events->isEmpty());
+    }
+
+    public function test_app_events_surfaces_non_404_errors(): void
+    {
+        // 5xx is a real hub failure and must not be swallowed as an empty list.
+        Http::fake([self::BASE.'/api/v1/apps/booking/events*' => Http::response(['message' => 'boom'], 500)]);
+
+        $this->expectException(HubUnreachableException::class);
+
+        $this->client()->appEvents('booking');
+    }
+
     // -------------------------------------------------------------------------
     // appMetrics()
     // -------------------------------------------------------------------------

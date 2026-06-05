@@ -119,7 +119,17 @@ class HttpHubClient implements HubClient
             'limit' => $filters['limit'] ?? null,
         ], fn ($v) => $v !== null && $v !== '');
 
-        return collect($this->send('get', "/api/v1/apps/{$slug}/events", query: $query)->json())
+        $response = $this->send('get', "/api/v1/apps/{$slug}/events", query: $query, throwOnError: false);
+
+        // Unknown app slug is a graceful empty list, mirroring FakeHubClient.
+        // Other non-2xx (401/403/5xx) still surface via guardResponse().
+        if ($response->status() === 404) {
+            return collect();
+        }
+
+        $this->guardResponse($response);
+
+        return collect($response->json())
             ->map(fn (array $e) => $this->hydrateAppEvent($e));
     }
 

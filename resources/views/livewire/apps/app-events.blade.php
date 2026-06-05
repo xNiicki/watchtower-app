@@ -16,7 +16,7 @@
             <div class="flex items-baseline justify-between">
                 <p class="font-medium">{{ $event->title }}</p>
                 <p class="text-sm {{ $event->severity === 'critical' ? 'text-red-400' : 'text-amber-400' }}">
-                    {{ $event->type }} · {{ $event->occurrences }}×
+                    {{ ucfirst($event->severity) }} · {{ $event->type }} · {{ $event->occurrences }}×
                 </p>
             </div>
             <p class="mt-1 text-sm text-zinc-400">{{ $event->message }}</p>

@@ -20,7 +20,10 @@ class AppEventsScreenTest extends TestCase
         Livewire::test(AppEvents::class, ['slug' => 'booking'])
             ->assertOk()
             ->assertSee('TypeError')
-            ->assertSee('412×');
+            ->assertSee('412×')
+            // Severity and type labels are shown so users can read why an item is red/amber.
+            ->assertSee('Critical')
+            ->assertSee('exception');
     }
 
     #[Test]
