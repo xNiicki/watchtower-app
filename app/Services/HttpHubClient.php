@@ -111,6 +111,8 @@ class HttpHubClient implements HubClient
 
     public function appEvents(string $slug, array $filters = []): Collection
     {
+        // Explicit callback instead of bare array_filter: preserves a numeric 0
+        // limit (falsy) that bare array_filter would silently strip.
         $query = array_filter([
             'search' => $filters['search'] ?? null,
             'limit' => $filters['limit'] ?? null,

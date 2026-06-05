@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Contracts\HubClient;
 use App\Data\Alert;
+use App\Data\AppEvent;
 use App\Data\AppHealth;
 use App\Data\DashboardSummary;
 use App\Data\Target;
@@ -94,5 +95,22 @@ class FakeHubClientTest extends TestCase
         $this->assertNotEmpty($apps);
         $this->assertInstanceOf(AppHealth::class, $apps->first());
         $this->assertSame('booking', $apps->first()->name);
+    }
+
+    #[Test]
+    public function test_app_events_returns_fixtures_and_filters_on_search(): void
+    {
+        $client = app(HubClient::class);
+
+        $events = $client->appEvents('booking');
+
+        $this->assertCount(2, $events);
+        foreach ($events as $event) {
+            $this->assertInstanceOf(AppEvent::class, $event);
+        }
+
+        $filtered = $client->appEvents('booking', ['search' => 'smtp']);
+        $this->assertCount(1, $filtered);
+        $this->assertSame('App\\Jobs\\SendInvoice', $filtered->first()->title);
     }
 }
