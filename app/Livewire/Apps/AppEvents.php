@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Apps;
 
 use App\Contracts\HubClient;
+use App\Data\AppMetricsSeries;
 use App\Livewire\Concerns\InteractsWithHub;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
@@ -23,12 +24,9 @@ class AppEvents extends Component
 
     public string $search = '';
 
+    public string $range = '1h';
+
     /**
-     * Metrics don't depend on the search filter, so they're fetched once in
-     * mount() and carried across re-renders rather than re-hitting /metrics on
-     * every debounced keystroke. Stored as a Livewire-serializable array shape
-     * (custom value objects can't be dehydrated as public properties).
-     *
      * @var array{requestsPerMin: int, latencyAvgMs: int, latencyMaxMs: int, slowRequests: int, slowQueries: int}|null
      */
     #[Locked]
@@ -49,12 +47,48 @@ class AppEvents extends Component
         ];
     }
 
+    public function setRange(string $range, HubClient $hub): void
+    {
+        if (! in_array($range, ['1h', '6h', '24h'], true)) {
+            return;
+        }
+
+        $this->range = $range;
+
+        // The chart canvas is inside wire:ignore, so push fresh data to it
+        // via a browser event rather than relying on a DOM diff.
+        $this->dispatch('metrics-updated', chart: $this->chartData($hub));
+    }
+
     public function render(HubClient $hub): View
     {
         $filters = $this->search !== '' ? ['search' => $this->search] : [];
 
         return view('livewire.apps.app-events', [
             'events' => $this->hubData(fn () => $hub->appEvents($this->slug, $filters)) ?? collect(),
+            'chart' => $this->chartData($hub),
         ]);
+    }
+
+    /**
+     * Shape the metric series into the plain arrays Chart.js consumes.
+     *
+     * @return array{labels: array<int, string>, requests: array<int, float>, latencyAvg: array<int, float>, latencyMax: array<int, float>}|null
+     */
+    private function chartData(HubClient $hub): ?array
+    {
+        /** @var AppMetricsSeries|null $series */
+        $series = $this->hubData(fn () => $hub->appMetricsSeries($this->slug, $this->range));
+
+        if ($series === null) {
+            return null;
+        }
+
+        return [
+            'labels' => array_map(fn (array $p) => $p['at']->format('H:i'), $series->requests),
+            'requests' => array_map(fn (array $p) => $p['value'], $series->requests),
+            'latencyAvg' => array_map(fn (array $p) => $p['value'], $series->latencyAvgMs),
+            'latencyMax' => array_map(fn (array $p) => $p['value'], $series->latencyMaxMs),
+        ];
     }
 }

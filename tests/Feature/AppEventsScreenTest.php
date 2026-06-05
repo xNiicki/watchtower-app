@@ -45,10 +45,36 @@ class AppEventsScreenTest extends TestCase
     }
 
     #[Test]
-    public function shows_metrics_summary(): void
+    public function shows_slow_count_chips(): void
     {
         Livewire::test(AppEvents::class, ['slug' => 'booking'])
-            ->assertSee('req/min')
-            ->assertSee('120');
+            ->assertSee('slow req')
+            ->assertSee('slow query');
+    }
+
+    #[Test]
+    public function shows_range_selector_and_links_events_to_detail(): void
+    {
+        Livewire::test(AppEvents::class, ['slug' => 'booking'])
+            ->assertOk()
+            ->assertSee('1h')->assertSee('6h')->assertSee('24h')
+            ->assertSeeHtml('/apps/booking/events/1');
+    }
+
+    #[Test]
+    public function set_range_updates_property_and_builds_chart_data(): void
+    {
+        Livewire::test(AppEvents::class, ['slug' => 'booking'])
+            ->call('setRange', '6h')
+            ->assertSet('range', '6h')
+            ->assertDispatched('metrics-updated');
+    }
+
+    #[Test]
+    public function set_range_ignores_invalid_values(): void
+    {
+        Livewire::test(AppEvents::class, ['slug' => 'booking'])
+            ->call('setRange', 'evil')
+            ->assertSet('range', '1h');
     }
 }
