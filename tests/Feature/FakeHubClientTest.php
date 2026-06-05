@@ -101,6 +101,14 @@ class FakeHubClientTest extends TestCase
     }
 
     #[Test]
+    public function apps_carry_delivery_health_fields(): void
+    {
+        $apps = (new FakeHubClient)->apps();
+        $this->assertFalse($apps->firstWhere('slug', 'booking')->deliveryDegraded);
+        $this->assertSame(0, $apps->firstWhere('slug', 'booking')->bufferDepth);
+    }
+
+    #[Test]
     public function test_app_events_returns_fixtures_and_filters_on_search(): void
     {
         $client = app(HubClient::class);

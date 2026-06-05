@@ -19,6 +19,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
@@ -348,6 +349,44 @@ class HttpHubClientTest extends TestCase
         $this->assertTrue($app->stale);
         $this->assertInstanceOf(CarbonImmutable::class, $app->lastSeenAt);
         $this->assertSame('2026-06-04T17:40:00+00:00', $app->lastSeenAt->toIso8601String());
+    }
+
+    // -------------------------------------------------------------------------
+    // apps() — delivery health fields
+    // -------------------------------------------------------------------------
+
+    #[Test]
+    public function summary_hydrates_app_delivery_health(): void
+    {
+        Http::fake([
+            self::BASE.'/api/v1/summary' => Http::response([
+                'targetsUp' => 1,
+                'targetsTotal' => 1,
+                'targetsPaused' => 0,
+                'openAlerts' => [],
+                'nodes' => [],
+                'apps' => [[
+                    'name' => 'booking', 'slug' => 'booking', 'healthy' => false,
+                    'errorsLastHour' => 0, 'queueDepth' => 0,
+                    'failedJobs24h' => 0, 'mailSent24h' => 0,
+                    'lastDeployAt' => null,
+                    'lastSeenAt' => '2026-06-04T17:40:00+00:00',
+                    'stale' => false,
+                    'bufferDepth' => 4,
+                    'lastShipError' => 'POST /api/ingest/event → 404',
+                    'deliveryDegraded' => true,
+                ]],
+                'lastBackupAt' => null,
+                'lastBackupOk' => false,
+                'tankUsagePercent' => 0,
+            ]),
+        ]);
+
+        $booking = $this->client()->summary()->apps->firstWhere('slug', 'booking');
+
+        $this->assertSame(4, $booking->bufferDepth);
+        $this->assertSame('POST /api/ingest/event → 404', $booking->lastShipError);
+        $this->assertTrue($booking->deliveryDegraded);
     }
 
     // -------------------------------------------------------------------------

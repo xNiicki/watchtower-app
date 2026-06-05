@@ -19,5 +19,8 @@ final readonly class AppHealth
         public ?CarbonImmutable $lastDeployAt = null,
         public ?CarbonImmutable $lastSeenAt = null,
         public bool $stale = false,
+        public int $bufferDepth = 0,
+        public ?string $lastShipError = null,
+        public bool $deliveryDegraded = false,
     ) {}
 }

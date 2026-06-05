@@ -144,6 +144,9 @@ class FakeHubClient implements HubClient
                 lastDeployAt: CarbonImmutable::now()->subDays(2),
                 lastSeenAt: CarbonImmutable::now()->subMinute(),
                 stale: false,
+                bufferDepth: 0,
+                lastShipError: null,
+                deliveryDegraded: false,
             ),
             new AppHealth(
                 name: 'newsletter',
@@ -156,6 +159,9 @@ class FakeHubClient implements HubClient
                 lastDeployAt: null,
                 lastSeenAt: CarbonImmutable::now()->subMinutes(42),
                 stale: true,
+                bufferDepth: 0,
+                lastShipError: null,
+                deliveryDegraded: false,
             ),
         ]);
     }

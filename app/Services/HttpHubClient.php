@@ -331,6 +331,9 @@ class HttpHubClient implements HubClient
             lastDeployAt: isset($data['lastDeployAt']) ? CarbonImmutable::parse($data['lastDeployAt']) : null,
             lastSeenAt: isset($data['lastSeenAt']) ? CarbonImmutable::parse($data['lastSeenAt']) : null,
             stale: (bool) ($data['stale'] ?? false),
+            bufferDepth: (int) ($data['bufferDepth'] ?? 0),
+            lastShipError: $data['lastShipError'] ?? null,
+            deliveryDegraded: (bool) ($data['deliveryDegraded'] ?? false),
         );
     }
 
