@@ -40,4 +40,12 @@ class AppEventsScreenTest extends TestCase
             ->assertSee('No events recorded.')
             ->assertDontSee('TypeError');
     }
+
+    #[Test]
+    public function shows_metrics_summary(): void
+    {
+        Livewire::test(AppEvents::class, ['slug' => 'booking'])
+            ->assertSee('req/min')
+            ->assertSee('120');
+    }
 }

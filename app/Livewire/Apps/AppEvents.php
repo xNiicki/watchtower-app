@@ -29,6 +29,7 @@ class AppEvents extends Component
 
         return view('livewire.apps.app-events', [
             'events' => $this->hubData(fn () => $hub->appEvents($this->slug, $filters)) ?? collect(),
+            'metrics' => $this->hubData(fn () => $hub->appMetrics($this->slug)),
         ]);
     }
 }
