@@ -9,6 +9,7 @@ use App\Contracts\TokenStore;
 use App\Data\Alert;
 use App\Data\AlertTier;
 use App\Data\AppEvent;
+use App\Data\AppEventDetail;
 use App\Data\AppHealth;
 use App\Data\AppMetrics;
 use App\Data\DashboardSummary;
@@ -131,6 +132,36 @@ class HttpHubClient implements HubClient
 
         return collect($response->json())
             ->map(fn (array $e) => $this->hydrateAppEvent($e));
+    }
+
+    public function appEvent(string $slug, string $id): ?AppEventDetail
+    {
+        $response = $this->send('get', "/api/v1/apps/{$slug}/events/{$id}", throwOnError: false);
+
+        // Unknown app/event is a graceful miss (null); other non-2xx surface.
+        if ($response->status() === 404) {
+            return null;
+        }
+
+        $this->guardResponse($response);
+
+        $d = $response->json();
+
+        return new AppEventDetail(
+            id: (string) $d['id'],
+            type: (string) $d['type'],
+            severity: (string) $d['severity'],
+            title: (string) $d['title'],
+            message: (string) $d['message'],
+            occurrences: (int) $d['occurrences'],
+            firstSeenAt: CarbonImmutable::parse($d['firstSeenAt']),
+            lastSeenAt: CarbonImmutable::parse($d['lastSeenAt']),
+            exceptionClass: $d['exceptionClass'] ?? null,
+            file: $d['file'] ?? null,
+            line: isset($d['line']) ? (int) $d['line'] : null,
+            trace: $d['trace'] ?? null,
+            context: is_array($d['context'] ?? null) ? $d['context'] : [],
+        );
     }
 
     public function appMetrics(string $slug): ?AppMetrics

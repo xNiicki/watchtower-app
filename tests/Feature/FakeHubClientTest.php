@@ -12,6 +12,7 @@ use App\Data\AppMetrics;
 use App\Data\DashboardSummary;
 use App\Data\Target;
 use App\Data\TargetStatus;
+use App\Services\FakeHubClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -113,6 +114,16 @@ class FakeHubClientTest extends TestCase
         $filtered = $client->appEvents('booking', ['search' => 'smtp']);
         $this->assertCount(1, $filtered);
         $this->assertSame('App\\Jobs\\SendInvoice', $filtered->first()->title);
+    }
+
+    #[Test]
+    public function app_event_returns_detail_for_booking_and_null_otherwise(): void
+    {
+        $fake = new FakeHubClient;
+        $this->assertNotNull($fake->appEvent('booking', '1'));
+        $this->assertSame('TypeError', $fake->appEvent('booking', '1')->exceptionClass);
+        $this->assertNull($fake->appEvent('booking', '999'));
+        $this->assertNull($fake->appEvent('unknown', '1'));
     }
 
     #[Test]

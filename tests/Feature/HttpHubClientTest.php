@@ -434,6 +434,42 @@ class HttpHubClientTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // appEvent()
+    // -------------------------------------------------------------------------
+
+    public function test_app_event_hydrates_detail_with_trace_and_context(): void
+    {
+        Http::fake(['*/api/v1/apps/booking/events/1' => Http::response([
+            'id' => '1', 'type' => 'exception', 'severity' => 'critical',
+            'title' => 'TypeError', 'message' => 'boom', 'occurrences' => 5,
+            'firstSeenAt' => '2026-06-05T05:00:00+00:00', 'lastSeenAt' => '2026-06-05T05:04:00+00:00',
+            'exceptionClass' => 'TypeError', 'file' => 'app/Foo.php', 'line' => 42,
+            'trace' => '#0 app/Foo.php(42)', 'context' => ['queue' => 'default'],
+        ])]);
+
+        $detail = $this->client()->appEvent('booking', '1');
+
+        $this->assertNotNull($detail);
+        $this->assertSame('app/Foo.php', $detail->file);
+        $this->assertSame(42, $detail->line);
+        $this->assertSame('#0 app/Foo.php(42)', $detail->trace);
+        $this->assertSame(['queue' => 'default'], $detail->context);
+    }
+
+    public function test_app_event_404_returns_null(): void
+    {
+        Http::fake(['*/api/v1/apps/booking/events/9' => Http::response(null, 404)]);
+        $this->assertNull($this->client()->appEvent('booking', '9'));
+    }
+
+    public function test_app_event_surfaces_non_404_errors(): void
+    {
+        Http::fake(['*/api/v1/apps/booking/events/1' => Http::response(null, 500)]);
+        $this->expectException(HubUnreachableException::class);
+        $this->client()->appEvent('booking', '1');
+    }
+
+    // -------------------------------------------------------------------------
     // Transport failure clears endpoint cache (Change 2)
     // -------------------------------------------------------------------------
 

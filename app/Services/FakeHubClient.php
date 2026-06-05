@@ -8,6 +8,7 @@ use App\Contracts\HubClient;
 use App\Data\Alert;
 use App\Data\AlertTier;
 use App\Data\AppEvent;
+use App\Data\AppEventDetail;
 use App\Data\AppHealth;
 use App\Data\AppMetrics;
 use App\Data\DashboardSummary;
@@ -172,6 +173,23 @@ class FakeHubClient implements HubClient
         ])->when(isset($filters['search']), fn ($c) => $c->filter(
             fn (AppEvent $e) => str_contains(strtolower($e->message), strtolower((string) $filters['search']))
         ))->values();
+    }
+
+    public function appEvent(string $slug, string $id): ?AppEventDetail
+    {
+        if ($slug !== 'booking' || $id !== '1') {
+            return null;
+        }
+
+        return new AppEventDetail(
+            id: '1', type: 'exception', severity: 'critical', title: 'TypeError',
+            message: 'Cannot read property foo', occurrences: 412,
+            firstSeenAt: CarbonImmutable::now()->subHours(2),
+            lastSeenAt: CarbonImmutable::now()->subMinutes(3),
+            exceptionClass: 'TypeError', file: 'app/Services/Booking.php', line: 42,
+            trace: "#0 app/Services/Booking.php(42): Booking->load()\n#1 app/Http/BookingController.php(88)",
+            context: ['queue' => 'default', 'connection' => 'redis', 'user_id' => 1042],
+        );
     }
 
     public function appMetrics(string $slug): ?AppMetrics
