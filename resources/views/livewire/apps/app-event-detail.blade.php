@@ -19,6 +19,9 @@
             @if ($event->file)
                 <p class="mt-1 font-mono text-xs text-zinc-400">{{ $event->file }}{{ $event->line ? ':'.$event->line : '' }}</p>
             @endif
+            @if ($event->exceptionClass)
+                <p class="mt-1 font-mono text-xs text-zinc-500">{{ $event->exceptionClass }}</p>
+            @endif
         </div>
 
         @if ($event->trace)

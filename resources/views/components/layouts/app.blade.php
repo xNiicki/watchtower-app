@@ -11,6 +11,7 @@
          we don't use, so "back" is a trailing action that navigates to the parent). --}}
     @php($backUrl = match (true) {
         request()->routeIs('infra.show') => route('infra.index'),
+        request()->routeIs('apps.event') => route('apps.events', ['slug' => request()->route('slug')]),
         default => null,
     })
     <native:top-bar title="{{ $title ?? 'Watchtower' }}" :show-navigation-icon="false">
