@@ -9,6 +9,7 @@ use App\Data\Alert;
 use App\Data\AppEvent;
 use App\Data\AppHealth;
 use App\Data\AppMetrics;
+use App\Data\AppMetricsSeries;
 use App\Data\DashboardSummary;
 use App\Data\Target;
 use App\Data\TargetStatus;
@@ -141,5 +142,17 @@ class FakeHubClientTest extends TestCase
         $this->assertSame(1, $metrics->slowQueries);
 
         $this->assertNull($client->appMetrics('unknown'));
+    }
+
+    #[Test]
+    public function app_metrics_series_returns_points_for_booking_and_null_otherwise(): void
+    {
+        $fake = new FakeHubClient;
+        $series = $fake->appMetricsSeries('booking', '6h');
+        $this->assertNotNull($series);
+        $this->assertInstanceOf(AppMetricsSeries::class, $series);
+        $this->assertSame('6h', $series->range);
+        $this->assertNotEmpty($series->requests);
+        $this->assertNull($fake->appMetricsSeries('unknown'));
     }
 }

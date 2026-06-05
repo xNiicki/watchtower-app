@@ -11,6 +11,7 @@ use App\Data\AppEvent;
 use App\Data\AppEventDetail;
 use App\Data\AppHealth;
 use App\Data\AppMetrics;
+use App\Data\AppMetricsSeries;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
 use App\Data\Target;
@@ -199,5 +200,24 @@ class FakeHubClient implements HubClient
         }
 
         return new AppMetrics(requestsPerMin: 120, latencyAvgMs: 45, latencyMaxMs: 320, slowRequests: 2, slowQueries: 1);
+    }
+
+    public function appMetricsSeries(string $slug, string $range = '1h'): ?AppMetricsSeries
+    {
+        if ($slug !== 'booking') {
+            return null;
+        }
+
+        $now = CarbonImmutable::now()->startOfMinute();
+        $mk = fn (array $values) => collect($values)
+            ->map(fn ($v, $i) => ['at' => $now->subMinutes(count($values) - 1 - $i), 'value' => (float) $v])
+            ->all();
+
+        return new AppMetricsSeries(
+            range: in_array($range, ['1h', '6h', '24h'], true) ? $range : '1h',
+            requests: $mk([90, 110, 130, 105, 150, 140, 162, 120]),
+            latencyAvgMs: $mk([40, 44, 38, 47, 42, 45, 41, 46]),
+            latencyMaxMs: $mk([210, 260, 300, 280, 320, 290, 340, 320]),
+        );
     }
 }

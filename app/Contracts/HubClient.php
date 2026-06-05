@@ -9,6 +9,7 @@ use App\Data\AppEvent;
 use App\Data\AppEventDetail;
 use App\Data\AppHealth;
 use App\Data\AppMetrics;
+use App\Data\AppMetricsSeries;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
 use App\Data\Target;
@@ -55,4 +56,7 @@ interface HubClient
     public function appEvent(string $slug, string $id): ?AppEventDetail;
 
     public function appMetrics(string $slug): ?AppMetrics;
+
+    /** @param string $range one of 1h|6h|24h */
+    public function appMetricsSeries(string $slug, string $range = '1h'): ?AppMetricsSeries;
 }

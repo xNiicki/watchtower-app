@@ -12,6 +12,7 @@ use App\Data\AppEvent;
 use App\Data\AppEventDetail;
 use App\Data\AppHealth;
 use App\Data\AppMetrics;
+use App\Data\AppMetricsSeries;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
 use App\Data\Target;
@@ -161,6 +162,33 @@ class HttpHubClient implements HubClient
             line: isset($d['line']) ? (int) $d['line'] : null,
             trace: $d['trace'] ?? null,
             context: is_array($d['context'] ?? null) ? $d['context'] : [],
+        );
+    }
+
+    public function appMetricsSeries(string $slug, string $range = '1h'): ?AppMetricsSeries
+    {
+        $response = $this->send('get', "/api/v1/apps/{$slug}/metrics", query: ['range' => $range], throwOnError: false);
+
+        if ($response->status() === 404) {
+            return null;
+        }
+
+        $this->guardResponse($response);
+
+        $series = $response->json('series');
+        if (! is_array($series)) {
+            return null;
+        }
+
+        $points = fn (string $key): array => collect($series[$key] ?? [])
+            ->map(fn (array $p) => ['at' => CarbonImmutable::parse($p['at']), 'value' => (float) $p['value']])
+            ->all();
+
+        return new AppMetricsSeries(
+            range: (string) ($response->json('range') ?? $range),
+            requests: $points('requests'),
+            latencyAvgMs: $points('request_latency_avg_ms'),
+            latencyMaxMs: $points('request_latency_max_ms'),
         );
     }
 

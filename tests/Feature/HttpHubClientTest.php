@@ -433,6 +433,36 @@ class HttpHubClientTest extends TestCase
         $this->client()->appMetrics('booking');
     }
 
+    public function test_app_metrics_series_hydrates_points_per_key(): void
+    {
+        Http::fake(['*/api/v1/apps/booking/metrics*' => Http::response([
+            'range' => '6h',
+            'series' => [
+                'requests' => [
+                    ['at' => '2026-06-05T05:00:00+00:00', 'value' => 120],
+                    ['at' => '2026-06-05T05:01:00+00:00', 'value' => 150],
+                ],
+                'request_latency_avg_ms' => [['at' => '2026-06-05T05:00:00+00:00', 'value' => 45.5]],
+                'request_latency_max_ms' => [['at' => '2026-06-05T05:00:00+00:00', 'value' => 320]],
+            ],
+            'latest' => [],
+        ])]);
+
+        $series = $this->client()->appMetricsSeries('booking', '6h');
+
+        $this->assertNotNull($series);
+        $this->assertSame('6h', $series->range);
+        $this->assertCount(2, $series->requests);
+        $this->assertSame(150.0, $series->requests[1]['value']);
+        $this->assertSame(45.5, $series->latencyAvgMs[0]['value']);
+    }
+
+    public function test_app_metrics_series_404_returns_null(): void
+    {
+        Http::fake(['*/api/v1/apps/booking/metrics*' => Http::response(null, 404)]);
+        $this->assertNull($this->client()->appMetricsSeries('booking', '1h'));
+    }
+
     // -------------------------------------------------------------------------
     // appEvent()
     // -------------------------------------------------------------------------
