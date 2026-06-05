@@ -144,9 +144,9 @@ class FakeHubClient implements HubClient
                 lastDeployAt: CarbonImmutable::now()->subDays(2),
                 lastSeenAt: CarbonImmutable::now()->subMinute(),
                 stale: false,
-                bufferDepth: 0,
-                lastShipError: null,
-                deliveryDegraded: false,
+                bufferDepth: 3,
+                lastShipError: 'POST /api/ingest/event → 404',
+                deliveryDegraded: true,
             ),
             new AppHealth(
                 name: 'newsletter',

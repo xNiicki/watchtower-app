@@ -104,8 +104,8 @@ class FakeHubClientTest extends TestCase
     public function apps_carry_delivery_health_fields(): void
     {
         $apps = (new FakeHubClient)->apps();
-        $this->assertFalse($apps->firstWhere('slug', 'booking')->deliveryDegraded);
-        $this->assertSame(0, $apps->firstWhere('slug', 'booking')->bufferDepth);
+        $this->assertTrue($apps->firstWhere('slug', 'booking')->deliveryDegraded);
+        $this->assertSame(3, $apps->firstWhere('slug', 'booking')->bufferDepth);
     }
 
     #[Test]

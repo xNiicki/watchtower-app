@@ -16,6 +16,9 @@
                     <p class="text-sm {{ $app->healthy ? 'text-green-400' : 'text-red-400' }}">{{ $app->healthy ? 'healthy' : 'unhealthy' }}</p>
                 @endif
             </div>
+            @if ($app->deliveryDegraded)
+                <p class="mt-2 text-xs text-amber-400">telemetry degraded · {{ $app->lastShipError ?? 'delivery backlog' }}</p>
+            @endif
             <div class="mt-3 grid grid-cols-2 gap-2 text-sm text-zinc-400">
                 <div>{{ $app->errorsLastHour }} errors last hour</div>
                 <div>queue {{ $app->queueDepth }}</div>
