@@ -32,6 +32,16 @@ class AppEvents extends Component
     #[Locked]
     public ?array $metrics = null;
 
+    /**
+     * Chart series shaped for Chart.js. Fetched in mount()/setRange() (not in
+     * render()) so debounced search keystrokes don't re-hit the metrics endpoint;
+     * the chart is independent of the search filter.
+     *
+     * @var array{labels: array<int, string>, requests: array<int, float>, latencyAvg: array<int, float>, latencyMax: array<int, float>}|null
+     */
+    #[Locked]
+    public ?array $chart = null;
+
     public function mount(string $slug, HubClient $hub): void
     {
         $this->slug = $slug;
@@ -45,6 +55,8 @@ class AppEvents extends Component
             'slowRequests' => $metrics->slowRequests,
             'slowQueries' => $metrics->slowQueries,
         ];
+
+        $this->chart = $this->chartData($hub);
     }
 
     public function setRange(string $range, HubClient $hub): void
@@ -54,10 +66,11 @@ class AppEvents extends Component
         }
 
         $this->range = $range;
+        $this->chart = $this->chartData($hub);
 
-        // The chart canvas is inside wire:ignore, so push fresh data to it
-        // via a browser event rather than relying on a DOM diff.
-        $this->dispatch('metrics-updated', chart: $this->chartData($hub));
+        // The chart canvas is inside wire:ignore, so Livewire won't re-init the
+        // Alpine component on re-render — push fresh data via a browser event instead.
+        $this->dispatch('metrics-updated', chart: $this->chart);
     }
 
     public function render(HubClient $hub): View
@@ -66,7 +79,7 @@ class AppEvents extends Component
 
         return view('livewire.apps.app-events', [
             'events' => $this->hubData(fn () => $hub->appEvents($this->slug, $filters)) ?? collect(),
-            'chart' => $this->chartData($hub),
+            'chart' => $this->chart,
         ]);
     }
 

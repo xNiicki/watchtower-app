@@ -77,4 +77,12 @@ class AppEventsScreenTest extends TestCase
             ->call('setRange', 'evil')
             ->assertSet('range', '1h');
     }
+
+    #[Test]
+    public function hides_chart_when_no_series(): void
+    {
+        Livewire::test(AppEvents::class, ['slug' => 'unknown'])
+            ->assertOk()
+            ->assertDontSeeHtml('x-data="metricsChart');
+    }
 }
