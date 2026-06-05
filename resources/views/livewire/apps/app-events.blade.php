@@ -6,8 +6,8 @@
 
     @if ($metrics)
         <div class="rounded-xl bg-zinc-900 p-3 text-sm text-zinc-300">
-            {{ $metrics->requestsPerMin }} req/min · avg {{ $metrics->latencyAvgMs }}ms · max {{ $metrics->latencyMaxMs }}ms
-            · {{ $metrics->slowRequests }} slow req · {{ $metrics->slowQueries }} slow query
+            {{ $metrics['requestsPerMin'] }} req/min · avg {{ $metrics['latencyAvgMs'] }}ms · max {{ $metrics['latencyMaxMs'] }}ms
+            · {{ $metrics['slowRequests'] }} slow req · {{ $metrics['slowQueries'] }} slow query
         </div>
     @endif
 

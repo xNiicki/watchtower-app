@@ -127,9 +127,13 @@ class HttpHubClient implements HubClient
     {
         $response = $this->send('get', "/api/v1/apps/{$slug}/metrics", throwOnError: false);
 
-        if (! $response->successful()) {
+        // Unknown app slug is a graceful miss (null), mirroring FakeHubClient.
+        // Other non-2xx (401/403/5xx) still surface via guardResponse().
+        if ($response->status() === 404) {
             return null;
         }
+
+        $this->guardResponse($response);
 
         $latest = $response->json('latest');
 

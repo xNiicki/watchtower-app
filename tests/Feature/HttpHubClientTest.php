@@ -395,6 +395,24 @@ class HttpHubClientTest extends TestCase
         $this->assertSame(2, $m->slowRequests);
     }
 
+    public function test_app_metrics_404_returns_null_not_an_exception(): void
+    {
+        // Unknown app slug is a graceful miss, mirroring FakeHubClient.
+        Http::fake([self::BASE.'/api/v1/apps/ghost/metrics*' => Http::response(['message' => 'Not Found'], 404)]);
+
+        $this->assertNull($this->client()->appMetrics('ghost'));
+    }
+
+    public function test_app_metrics_surfaces_non_404_errors(): void
+    {
+        // 5xx is a real hub failure and must not be swallowed as a null miss.
+        Http::fake([self::BASE.'/api/v1/apps/booking/metrics*' => Http::response(['message' => 'boom'], 500)]);
+
+        $this->expectException(HubUnreachableException::class);
+
+        $this->client()->appMetrics('booking');
+    }
+
     // -------------------------------------------------------------------------
     // Transport failure clears endpoint cache (Change 2)
     // -------------------------------------------------------------------------
