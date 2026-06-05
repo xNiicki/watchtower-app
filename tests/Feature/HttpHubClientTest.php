@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Contracts\TokenStore;
 use App\Data\Alert;
 use App\Data\AlertTier;
+use App\Data\AppEvent;
 use App\Data\AppHealth;
 use App\Data\DashboardSummary;
 use App\Data\Target;
@@ -347,6 +348,28 @@ class HttpHubClientTest extends TestCase
         $this->assertTrue($app->stale);
         $this->assertInstanceOf(CarbonImmutable::class, $app->lastSeenAt);
         $this->assertSame('2026-06-04T17:40:00+00:00', $app->lastSeenAt->toIso8601String());
+    }
+
+    // -------------------------------------------------------------------------
+    // appEvents()
+    // -------------------------------------------------------------------------
+
+    public function test_fetches_app_events(): void
+    {
+        Http::fake([self::BASE.'/api/v1/apps/booking/events*' => Http::response([[
+            'id' => '7', 'type' => 'exception', 'severity' => 'critical',
+            'title' => 'TypeError', 'message' => 'boom', 'occurrences' => 12,
+            'firstSeenAt' => '2026-06-04T17:00:00+00:00',
+            'lastSeenAt' => '2026-06-04T17:30:00+00:00',
+        ]], 200)]);
+
+        $events = $this->client()->appEvents('booking');
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(AppEvent::class, $events->first());
+        $this->assertSame('TypeError', $events->first()->title);
+        $this->assertSame(12, $events->first()->occurrences);
+        $this->assertSame('critical', $events->first()->severity);
     }
 
     // -------------------------------------------------------------------------

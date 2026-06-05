@@ -8,6 +8,7 @@ use App\Contracts\HubClient;
 use App\Contracts\TokenStore;
 use App\Data\Alert;
 use App\Data\AlertTier;
+use App\Data\AppEvent;
 use App\Data\AppHealth;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
@@ -106,6 +107,17 @@ class HttpHubClient implements HubClient
     public function apps(): Collection
     {
         return $this->summary()->apps;
+    }
+
+    public function appEvents(string $slug, array $filters = []): Collection
+    {
+        $query = array_filter([
+            'search' => $filters['search'] ?? null,
+            'limit' => $filters['limit'] ?? null,
+        ], fn ($v) => $v !== null && $v !== '');
+
+        return collect($this->send('get', "/api/v1/apps/{$slug}/events", query: $query)->json())
+            ->map(fn (array $e) => $this->hydrateAppEvent($e));
     }
 
     // -------------------------------------------------------------------------
@@ -231,6 +243,21 @@ class HttpHubClient implements HubClient
             severity: (string) $data['severity'],
             message: (string) $data['message'],
             loggedAt: CarbonImmutable::parse($data['loggedAt']),
+        );
+    }
+
+    /** @param array<string, mixed> $data */
+    private function hydrateAppEvent(array $data): AppEvent
+    {
+        return new AppEvent(
+            id: (string) $data['id'],
+            type: (string) $data['type'],
+            severity: (string) $data['severity'],
+            title: (string) $data['title'],
+            message: (string) $data['message'],
+            occurrences: (int) $data['occurrences'],
+            firstSeenAt: CarbonImmutable::parse($data['firstSeenAt']),
+            lastSeenAt: CarbonImmutable::parse($data['lastSeenAt']),
         );
     }
 }

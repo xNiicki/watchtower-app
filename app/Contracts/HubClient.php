@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Contracts;
 
 use App\Data\Alert;
+use App\Data\AppEvent;
 use App\Data\AppHealth;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
@@ -41,4 +42,7 @@ interface HubClient
 
     /** @return Collection<int, AppHealth> */
     public function apps(): Collection;
+
+    /** @return Collection<int, AppEvent> */
+    public function appEvents(string $slug, array $filters = []): Collection;
 }

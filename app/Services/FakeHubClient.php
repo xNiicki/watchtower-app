@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Contracts\HubClient;
 use App\Data\Alert;
 use App\Data\AlertTier;
+use App\Data\AppEvent;
 use App\Data\AppHealth;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
@@ -152,5 +153,17 @@ class FakeHubClient implements HubClient
                 stale: true,
             ),
         ]);
+    }
+
+    public function appEvents(string $slug, array $filters = []): Collection
+    {
+        return collect([
+            new AppEvent('1', 'exception', 'critical', 'TypeError', 'Cannot read property foo', 412,
+                CarbonImmutable::now()->subHours(2), CarbonImmutable::now()->subMinutes(3)),
+            new AppEvent('2', 'failed_job', 'critical', 'App\\Jobs\\SendInvoice', 'SMTP connect failed', 7,
+                CarbonImmutable::now()->subDay(), CarbonImmutable::now()->subMinutes(30)),
+        ])->when(isset($filters['search']), fn ($c) => $c->filter(
+            fn (AppEvent $e) => str_contains(strtolower($e->message), strtolower((string) $filters['search']))
+        ))->values();
     }
 }
