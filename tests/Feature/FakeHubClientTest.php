@@ -8,6 +8,7 @@ use App\Contracts\HubClient;
 use App\Data\Alert;
 use App\Data\AppEvent;
 use App\Data\AppHealth;
+use App\Data\AppMetrics;
 use App\Data\DashboardSummary;
 use App\Data\Target;
 use App\Data\TargetStatus;
@@ -112,5 +113,22 @@ class FakeHubClientTest extends TestCase
         $filtered = $client->appEvents('booking', ['search' => 'smtp']);
         $this->assertCount(1, $filtered);
         $this->assertSame('App\\Jobs\\SendInvoice', $filtered->first()->title);
+    }
+
+    #[Test]
+    public function app_metrics_returns_summary_for_known_slug_and_null_for_unknown(): void
+    {
+        $client = app(HubClient::class);
+
+        $metrics = $client->appMetrics('booking');
+
+        $this->assertInstanceOf(AppMetrics::class, $metrics);
+        $this->assertSame(120, $metrics->requestsPerMin);
+        $this->assertSame(45, $metrics->latencyAvgMs);
+        $this->assertSame(320, $metrics->latencyMaxMs);
+        $this->assertSame(2, $metrics->slowRequests);
+        $this->assertSame(1, $metrics->slowQueries);
+
+        $this->assertNull($client->appMetrics('unknown'));
     }
 }
