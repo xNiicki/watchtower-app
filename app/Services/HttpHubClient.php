@@ -8,6 +8,7 @@ use App\Contracts\HubClient;
 use App\Contracts\TokenStore;
 use App\Data\Alert;
 use App\Data\AlertTier;
+use App\Data\AppEvent;
 use App\Data\AppHealth;
 use App\Data\DashboardSummary;
 use App\Data\LogEntry;
@@ -106,6 +107,29 @@ class HttpHubClient implements HubClient
     public function apps(): Collection
     {
         return $this->summary()->apps;
+    }
+
+    public function appEvents(string $slug, array $filters = []): Collection
+    {
+        // Explicit callback instead of bare array_filter: preserves a numeric 0
+        // limit (falsy) that bare array_filter would silently strip.
+        $query = array_filter([
+            'search' => $filters['search'] ?? null,
+            'limit' => $filters['limit'] ?? null,
+        ], fn ($v) => $v !== null && $v !== '');
+
+        $response = $this->send('get', "/api/v1/apps/{$slug}/events", query: $query, throwOnError: false);
+
+        // Unknown app slug is a graceful empty list, mirroring FakeHubClient.
+        // Other non-2xx (401/403/5xx) still surface via guardResponse().
+        if ($response->status() === 404) {
+            return collect();
+        }
+
+        $this->guardResponse($response);
+
+        return collect($response->json())
+            ->map(fn (array $e) => $this->hydrateAppEvent($e));
     }
 
     // -------------------------------------------------------------------------
@@ -211,6 +235,7 @@ class HttpHubClient implements HubClient
     {
         return new AppHealth(
             name: (string) $data['name'],
+            slug: (string) ($data['slug'] ?? ''),
             healthy: (bool) $data['healthy'],
             errorsLastHour: (int) $data['errorsLastHour'],
             queueDepth: (int) $data['queueDepth'],
@@ -231,6 +256,21 @@ class HttpHubClient implements HubClient
             severity: (string) $data['severity'],
             message: (string) $data['message'],
             loggedAt: CarbonImmutable::parse($data['loggedAt']),
+        );
+    }
+
+    /** @param array<string, mixed> $data */
+    private function hydrateAppEvent(array $data): AppEvent
+    {
+        return new AppEvent(
+            id: (string) $data['id'],
+            type: (string) $data['type'],
+            severity: (string) $data['severity'],
+            title: (string) $data['title'],
+            message: (string) $data['message'],
+            occurrences: (int) $data['occurrences'],
+            firstSeenAt: CarbonImmutable::parse($data['firstSeenAt']),
+            lastSeenAt: CarbonImmutable::parse($data['lastSeenAt']),
         );
     }
 }

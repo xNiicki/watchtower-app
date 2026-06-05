@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Contracts\TokenStore;
 use App\Data\Alert;
 use App\Data\AlertTier;
+use App\Data\AppEvent;
 use App\Data\AppHealth;
 use App\Data\DashboardSummary;
 use App\Data\Target;
@@ -88,7 +89,7 @@ class HttpHubClientTest extends TestCase
                     ['id' => 'pve', 'name' => 'pve', 'type' => 'node', 'status' => 'up', 'node' => null, 'cpuPercent' => 23.0, 'memPercent' => 61.0, 'diskPercent' => 48.0, 'latencyMs' => null],
                 ],
                 'apps' => [
-                    ['name' => 'booking', 'healthy' => true, 'errorsLastHour' => 0, 'queueDepth' => 3, 'failedJobs24h' => 1, 'mailSent24h' => 14, 'lastDeployAt' => '2026-05-31T08:00:00Z'],
+                    ['name' => 'booking', 'slug' => 'booking', 'healthy' => true, 'errorsLastHour' => 0, 'queueDepth' => 3, 'failedJobs24h' => 1, 'mailSent24h' => 14, 'lastDeployAt' => '2026-05-31T08:00:00Z'],
                 ],
                 'lastBackupAt' => '2026-06-02T03:12:00Z',
                 'lastBackupOk' => true,
@@ -324,7 +325,7 @@ class HttpHubClientTest extends TestCase
                 'openAlerts' => [],
                 'nodes' => [],
                 'apps' => [[
-                    'name' => 'booking', 'healthy' => false,
+                    'name' => 'booking', 'slug' => 'booking', 'healthy' => false,
                     'errorsLastHour' => 0, 'queueDepth' => 0,
                     'failedJobs24h' => 0, 'mailSent24h' => 0,
                     'lastDeployAt' => null,
@@ -347,6 +348,48 @@ class HttpHubClientTest extends TestCase
         $this->assertTrue($app->stale);
         $this->assertInstanceOf(CarbonImmutable::class, $app->lastSeenAt);
         $this->assertSame('2026-06-04T17:40:00+00:00', $app->lastSeenAt->toIso8601String());
+    }
+
+    // -------------------------------------------------------------------------
+    // appEvents()
+    // -------------------------------------------------------------------------
+
+    public function test_fetches_app_events(): void
+    {
+        Http::fake([self::BASE.'/api/v1/apps/booking/events*' => Http::response([[
+            'id' => '7', 'type' => 'exception', 'severity' => 'critical',
+            'title' => 'TypeError', 'message' => 'boom', 'occurrences' => 12,
+            'firstSeenAt' => '2026-06-04T17:00:00+00:00',
+            'lastSeenAt' => '2026-06-04T17:30:00+00:00',
+        ]], 200)]);
+
+        $events = $this->client()->appEvents('booking');
+
+        $this->assertCount(1, $events);
+        $this->assertInstanceOf(AppEvent::class, $events->first());
+        $this->assertSame('TypeError', $events->first()->title);
+        $this->assertSame(12, $events->first()->occurrences);
+        $this->assertSame('critical', $events->first()->severity);
+    }
+
+    public function test_app_events_404_returns_an_empty_collection_not_an_error(): void
+    {
+        // Unknown app slug is a graceful empty list, mirroring FakeHubClient.
+        Http::fake([self::BASE.'/api/v1/apps/ghost/events*' => Http::response(['message' => 'Not Found'], 404)]);
+
+        $events = $this->client()->appEvents('ghost');
+
+        $this->assertTrue($events->isEmpty());
+    }
+
+    public function test_app_events_surfaces_non_404_errors(): void
+    {
+        // 5xx is a real hub failure and must not be swallowed as an empty list.
+        Http::fake([self::BASE.'/api/v1/apps/booking/events*' => Http::response(['message' => 'boom'], 500)]);
+
+        $this->expectException(HubUnreachableException::class);
+
+        $this->client()->appEvents('booking');
     }
 
     // -------------------------------------------------------------------------
