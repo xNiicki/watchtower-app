@@ -16,11 +16,18 @@
         <div wire:ignore x-data="metricsChart(@js($chart))" class="space-y-3">
             <div class="rounded-xl bg-zinc-900 p-3">
                 <p class="text-xs text-zinc-400">Requests / min</p>
-                <canvas x-ref="requests" class="mt-2" height="120"></canvas>
+                {{-- Fixed-height, relatively-positioned wrapper: Chart.js with
+                     maintainAspectRatio:false sizes the canvas to its container,
+                     so the height must be pinned here or it grows unbounded. --}}
+                <div class="relative mt-2" style="height: 160px">
+                    <canvas x-ref="requests"></canvas>
+                </div>
             </div>
             <div class="rounded-xl bg-zinc-900 p-3">
                 <p class="text-xs text-zinc-400">Latency (avg / max ms)</p>
-                <canvas x-ref="latency" class="mt-2" height="120"></canvas>
+                <div class="relative mt-2" style="height: 160px">
+                    <canvas x-ref="latency"></canvas>
+                </div>
             </div>
         </div>
     @endif
