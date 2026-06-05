@@ -132,6 +132,7 @@ class FakeHubClient implements HubClient
         return collect([
             new AppHealth(
                 name: 'booking',
+                slug: 'booking',
                 healthy: true,
                 errorsLastHour: 0,
                 queueDepth: 3,
@@ -143,6 +144,7 @@ class FakeHubClient implements HubClient
             ),
             new AppHealth(
                 name: 'newsletter',
+                slug: 'newsletter',
                 healthy: false,
                 errorsLastHour: 0,
                 queueDepth: 0,

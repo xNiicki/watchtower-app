@@ -2,7 +2,8 @@
     @include('partials.hub-error')
 
     @forelse ($apps as $app)
-        <div class="rounded-xl bg-zinc-900 p-4 {{ $app->stale ? 'opacity-60' : '' }}">
+        <a href="{{ route('apps.events', $app->slug) }}" wire:navigate
+           class="block rounded-xl bg-zinc-900 p-4 {{ $app->stale ? 'opacity-60' : '' }}">
             <div class="flex items-baseline justify-between">
                 <p class="font-medium">{{ $app->name }}</p>
                 @if ($app->stale)
@@ -27,7 +28,7 @@
                     <span>last seen {{ $app->lastSeenAt->diffForHumans() }}</span>
                 @endif
             </div>
-        </div>
+        </a>
     @empty
         <p class="py-12 text-center text-zinc-500">No applications configured.</p>
     @endforelse

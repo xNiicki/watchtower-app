@@ -225,6 +225,7 @@ class HttpHubClient implements HubClient
     {
         return new AppHealth(
             name: (string) $data['name'],
+            slug: (string) ($data['slug'] ?? ''),
             healthy: (bool) $data['healthy'],
             errorsLastHour: (int) $data['errorsLastHour'],
             queueDepth: (int) $data['queueDepth'],

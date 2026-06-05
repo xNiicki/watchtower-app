@@ -89,7 +89,7 @@ class HttpHubClientTest extends TestCase
                     ['id' => 'pve', 'name' => 'pve', 'type' => 'node', 'status' => 'up', 'node' => null, 'cpuPercent' => 23.0, 'memPercent' => 61.0, 'diskPercent' => 48.0, 'latencyMs' => null],
                 ],
                 'apps' => [
-                    ['name' => 'booking', 'healthy' => true, 'errorsLastHour' => 0, 'queueDepth' => 3, 'failedJobs24h' => 1, 'mailSent24h' => 14, 'lastDeployAt' => '2026-05-31T08:00:00Z'],
+                    ['name' => 'booking', 'slug' => 'booking', 'healthy' => true, 'errorsLastHour' => 0, 'queueDepth' => 3, 'failedJobs24h' => 1, 'mailSent24h' => 14, 'lastDeployAt' => '2026-05-31T08:00:00Z'],
                 ],
                 'lastBackupAt' => '2026-06-02T03:12:00Z',
                 'lastBackupOk' => true,
@@ -325,7 +325,7 @@ class HttpHubClientTest extends TestCase
                 'openAlerts' => [],
                 'nodes' => [],
                 'apps' => [[
-                    'name' => 'booking', 'healthy' => false,
+                    'name' => 'booking', 'slug' => 'booking', 'healthy' => false,
                     'errorsLastHour' => 0, 'queueDepth' => 0,
                     'failedJobs24h' => 0, 'mailSent24h' => 0,
                     'lastDeployAt' => null,

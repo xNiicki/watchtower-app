@@ -10,6 +10,7 @@ final readonly class AppHealth
 {
     public function __construct(
         public string $name,
+        public string $slug,
         public bool $healthy,
         public int $errorsLastHour,
         public int $queueDepth,
