@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Alerts\AlertList;
+use App\Livewire\Apps\AppEventDetail;
 use App\Livewire\Apps\AppEvents;
 use App\Livewire\Apps\AppList;
 use App\Livewire\Dashboard;
@@ -17,6 +18,7 @@ Route::get('/infra', TargetList::class)->name('infra.index');
 Route::get('/infra/{targetId}', TargetDetail::class)->name('infra.show');
 Route::get('/apps', AppList::class)->name('apps.index');
 Route::get('/apps/{slug}/events', AppEvents::class)->name('apps.events');
+Route::get('/apps/{slug}/events/{id}', AppEventDetail::class)->name('apps.event');
 Route::get('/logs', LogSearch::class)->name('logs.index');
 Route::get('/alerts', AlertList::class)->name('alerts.index');
 Route::get('/settings', Settings::class)->name('settings');
