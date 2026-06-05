@@ -43,6 +43,9 @@ interface HubClient
     /** @return Collection<int, AppHealth> */
     public function apps(): Collection;
 
-    /** @return Collection<int, AppEvent> */
+    /**
+     * @param  array{search?: string, limit?: int}  $filters
+     * @return Collection<int, AppEvent>
+     */
     public function appEvents(string $slug, array $filters = []): Collection;
 }

@@ -23,6 +23,11 @@ class AppEvents extends Component
 
     public string $search = '';
 
+    public function mount(string $slug): void
+    {
+        $this->slug = $slug;
+    }
+
     public function render(HubClient $hub): View
     {
         $filters = $this->search !== '' ? ['search' => $this->search] : [];
